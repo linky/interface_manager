@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #define STR_MAX 128
 
 typedef struct
@@ -11,7 +13,7 @@ typedef struct
     char SVendor[STR_MAX];
     char SDevice[STR_MAX];
     char PhySlot[STR_MAX];
-    char Rev[STR_MAX];
+    uint64_t Rev;
     char Driver[STR_MAX];
     char DriverStr[STR_MAX];
     char Module[STR_MAX];
@@ -23,17 +25,17 @@ typedef struct
     char InterfaceName[STR_MAX];
     char MacAdress[STR_MAX];
     char InterfaceType[STR_MAX];
-    char Link[STR_MAX];
+    uint8_t Link;
     char Product[STR_MAX];
     char Model[STR_MAX];
     //char Driver[STR_MAX];
     char DriverVersion[STR_MAX];
     char PciLocation[STR_MAX];
-    char IPv4[STR_MAX];
-    char IPv6[STR_MAX];
-    char Speed[STR_MAX];
+    uint32_t IPv4;
+    uint64_t IPv6;
+    uint64_t Speed;
     char Status[STR_MAX];
-    char RSS[STR_MAX];
+    uint8_t RSS;
 } interface_t; // TODO rename and check fields
 
 int im_Init();

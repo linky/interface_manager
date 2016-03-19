@@ -14,13 +14,13 @@ char* check_output(const char* cmd);
 
 const char* find_module(const char* mod);
 
-void check_modules();
+int check_dpdk_modules(void);
 
 int has_driver(const char* drv);
 
 void get_pci_device_details(interface_t* dev);
 
-void get_nic_details();
+void get_dpdk_nic_details(void);
 
 const char* dev_id_from_dev_name(const char* dev_name);
 

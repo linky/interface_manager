@@ -6,6 +6,7 @@
 #include <dirent.h>
 
 #include "if_private.h"
+#include "misc.h"
 
 #define ETHERNET_CLASS "0200"
 #define DEVICES_SIZE 20
@@ -134,34 +135,39 @@ get_lshw_stats(interface_t * net, mxml_node_t * tree)
         strcpy(net->PciLocation, "No data");
 
     temp = mxmlFindElement(tree, tree, "setting", "id", "link", MXML_DESCEND);
-    if (temp)
-        strcpy(net->Link, mxmlElementGetAttr(temp, "value"));
+    if (temp && strcmp("yes", mxmlElementGetAttr(temp, "value")))
+        net->Link = 1;
+    else if (temp && strcmp("no", mxmlElementGetAttr(temp, "value")))
+        net->Link = 0;
     else
-        strcpy(net->Link, "No data");
+        net->Link = -1;
 
     temp = mxmlFindElement(tree, tree, "setting", "id", "ip", MXML_DESCEND);
     if (temp)
-        strcpy(net->IPv4, mxmlElementGetAttr(temp, "value"));
+        net->IPv4 = IP_to_Int(mxmlElementGetAttr(temp, "value"));
     else
-        strcpy(net->IPv4, "No data");
+        net->IPv4 = 0;
 
     temp = mxmlFindElement(tree, tree, "setting", "id", "ipv6", MXML_DESCEND);
     if (temp)
-        strcpy(net->IPv6, mxmlElementGetAttr(temp, "value"));
+        net->IPv6 = IP_to_Int(mxmlElementGetAttr(temp, "value"));
     else
-        strcpy(net->IPv6, "No data");
+        net->IPv6 = 0;
 
     temp = mxmlFindElement(tree, tree, "capacity", NULL, NULL, MXML_DESCEND);
     if (temp)
-        strcpy(net->Speed, mxmlGetOpaque(temp));
+        net->Speed = atoi(mxmlGetOpaque(temp));
     else
-        strcpy(net->Speed, "No data");
+        net->Speed = 0;
 
     temp = mxmlFindElement(tree, tree, "setting", "id", "multicast", MXML_DESCEND);
-    if (temp)
-        strcpy(net->RSS, mxmlElementGetAttr(temp, "value"));
+    if (temp && strcmp("yes", mxmlElementGetAttr(temp, "value")))
+        net->RSS = 1;
+    else if (temp && strcmp("no", mxmlElementGetAttr(temp, "value")))
+        net->RSS = 0;
     else
-        strcpy(net->RSS, "No data");
+        net->RSS = -1;
+
 
     mxmlDelete(temp);
 }
@@ -171,11 +177,11 @@ void dump_lshw(interface_t * net)
     printf("\n");
     printf("Interface name: %s \n", net->InterfaceName);
     printf("MAC adress: %s \n", net->MacAdress);
-    printf("Speed: %s \n", net->Speed);
-    printf("Link: %s \n", net->Link);
+    printf("Speed: %lu \n", net->Speed);
+    printf("Link: %u \n", net->Link);
     printf("Status: %s \n", net->Status);
-    printf("IPv4: %s \n", net->IPv4);
-    printf("IPv6: %s \n", net->IPv6);
+    printf("IPv4: %u \n", net->IPv4);
+    printf("IPv6: %lu \n", net->IPv6);
     printf("Interface type: %s \n", net->InterfaceType);
     printf("Product: %s \n", net->Product);
     printf("Model: %s \n", net->Model);
@@ -230,7 +236,7 @@ device_to_str(interface_t * dev, char *str)
             "SVendor:\t%s\n"
             "SDevice:\t%s\n"
             "PhySlot:\t%s\n"
-            "Rev:\t%s\n"
+            "Rev:\t%lu\n"
             "Driver:\t%s\n"
             "DriverStr:\t%s\n"
             "Module:\t%s\n"
@@ -373,31 +379,26 @@ get_pci_device_details(interface_t * dev)
         const char *name = strsep(&line, "\t");
         const char *value = strsep(&line, "\t");
 
-        char *field = NULL;
         if (!strcmp(name, "Class:"))
-            field = dev->Class;
+            strcpy(dev->Class, value);
         else if (!strcmp(name, "Vendor:"))
-            field = dev->Vendor;
+            strcpy(dev->Vendor, value);
         else if (!strcmp(name, "Device:"))
-            field = dev->Device;
+            strcpy(dev->Device, value);
         else if (!strcmp(name, "SVendor:"))
-            field = dev->SVendor;
+            strcpy(dev->SVendor, value);
         else if (!strcmp(name, "SDevice:"))
-            field = dev->SDevice;
+            strcpy(dev->SDevice, value);
         else if (!strcmp(name, "Rev:"))
-            field = dev->Rev;
+            dev->Rev = atoll(value);
         else if (!strcmp(name, "Driver:"))
-            field = dev->Driver;
+            strcpy(dev->Driver, value);
         else if (!strcmp(name, "Module:"))
-            field = dev->Module;
+            strcpy(dev->Module, value);
         else if (!strcmp(name, "Interface:"))
-            field = dev->Interface;
+            strcpy(dev->Interface, value);
         else if (!strcmp(name, "PhySlot:"))
-            field = dev->PhySlot;
-
-        if (field) {
-            strcpy(field, value);
-        }
+            strcpy(dev->PhySlot, value);
 
         line = strtok(NULL, "\n");
     }
@@ -429,35 +430,27 @@ get_dpdk_nic_details(void)
 
         const char *name = strsep(&dev_line, "\t");
         const char *value = strsep(&dev_line, "\t");
-        char *field = NULL;
-        if (!strcmp(name, "Slot:"))
-            field = dev.Slot;
-        else if (!strcmp(name, "Class:"))
-            field = dev.Class;
-        else if (!strcmp(name, "Vendor:"))
-            field = dev.Vendor;
-        else if (!strcmp(name, "Device:"))
-            field = dev.Device;
-        else if (!strcmp(name, "SVendor:"))
-            field = dev.SVendor;
-        else if (!strcmp(name, "SDevice:"))
-            field = dev.SDevice;
-        else if (!strcmp(name, "Rev:"))
-            field = dev.Rev;
-        else if (!strcmp(name, "Driver:"))
-            field = dev.Driver;
-        else if (!strcmp(name, "Module:"))
-            field = dev.Module;
-        else if (!strcmp(name, "ProgIf:"))
-            field = dev.ProgIf;
-        else if (!strcmp(name, "Interface:"))
-            field = dev.Interface;
-        else if (!strcmp(name, "PhySlot:"))
-            field = dev.PhySlot;
 
-        if (field) {
-            strcpy(field, value);
-        }
+        if (!strcmp(name, "Class:"))
+            strcpy(dev.Class, value);
+        else if (!strcmp(name, "Vendor:"))
+            strcpy(dev.Vendor, value);
+        else if (!strcmp(name, "Device:"))
+            strcpy(dev.Device, value);
+        else if (!strcmp(name, "SVendor:"))
+            strcpy(dev.SVendor, value);
+        else if (!strcmp(name, "SDevice:"))
+            strcpy(dev.SDevice, value);
+        else if (!strcmp(name, "Rev:"))
+            dev.Rev = atoll(value);
+        else if (!strcmp(name, "Driver:"))
+            strcpy(dev.Driver, value);
+        else if (!strcmp(name, "Module:"))
+            strcpy(dev.Module, value);
+        else if (!strcmp(name, "Interface:"))
+            strcpy(dev.Interface, value);
+        else if (!strcmp(name, "PhySlot:"))
+            strcpy(dev.PhySlot, value);
 
         dev_line = strtok(NULL, "\n");
         ++i;
@@ -773,6 +766,16 @@ show_status(interface_t * kernel_drv, size_t * kernel_drv_size, interface_t * dp
 int
 main(int argc, char *argv[])
 {
+    check_dpdk_modules();
+    get_dpdk_nic_details();
+
+    enum { DSIZE = 10 };
+    interface_t a[DSIZE], b[DSIZE], c[DSIZE];
+    size_t asize = DSIZE, bsize = DSIZE, csize = DSIZE;
+    show_status(a, &asize, b, &bsize, c, &csize);
+    static char buf[STR_MAX*20];
+    device_to_str(c, buf);
+
     interface_t *net; // need free
     int size = parse_file("/root/interface_manager/out.xml", &net);
 }
