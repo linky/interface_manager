@@ -3,52 +3,7 @@
 #include <stdlib.h>
 #include <mxml.h>
 
-#define STR_MAX 256
-#define LSHW_STR_LEN STR_MAX
-#define ETHERNET_CLASS "0200"
-#define DEVICES_SIZE 20
-#define DPDK_SIZE 3
-
-typedef struct driver
-{
-    char name[STR_MAX];
-    int found;
-} driver;
-
-typedef struct
-{
-    char slot[STR_MAX];
-    char class[STR_MAX];
-    char vendor[STR_MAX];
-    char device[STR_MAX];
-    char svendor[STR_MAX];
-    char sdevice[STR_MAX];
-    char phy_slot[STR_MAX];
-    char rev[STR_MAX];
-    char driver[STR_MAX];
-    char driver_str[STR_MAX];
-    char module[STR_MAX];
-    char module_str[STR_MAX];
-    char interface[STR_MAX];
-    char progif[STR_MAX];
-    char active[STR_MAX];
-    int ssh_if;
-    char InterfaceName[LSHW_STR_LEN];
-    char MacAdress[LSHW_STR_LEN];
-    char InterfaceType[LSHW_STR_LEN];
-    char Link[LSHW_STR_LEN];
-    char Product[LSHW_STR_LEN];
-    char Model[LSHW_STR_LEN];
-    char Driver[LSHW_STR_LEN];
-    char DriverVersion[LSHW_STR_LEN];
-    char PciLocation[LSHW_STR_LEN];
-    char IPv4[LSHW_STR_LEN];
-    char IPv6[LSHW_STR_LEN];
-    char Speed[LSHW_STR_LEN];
-    char Status[LSHW_STR_LEN];
-    char RSS[LSHW_STR_LEN];
-} interface_t; // TODO rename and check fields
-
+#include "if_manager.h"
 
 int parse_file(const char * fname, interface_t ** out);
 

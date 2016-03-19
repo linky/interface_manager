@@ -7,13 +7,23 @@
 
 #include "if_private.h"
 
-static driver dpdk_drivers[] = { {"igb_uio", 0}, {"vfio-pci", 0}, {"uio_pci_generic", 0} };
+#define ETHERNET_CLASS "0200"
+#define DEVICES_SIZE 20
+#define DPDK_SIZE 3
+
+typedef struct
+{
+    char name[STR_MAX];
+    int found;
+} driver_t;
+
+static driver_t dpdk_drivers[] = {{"igb_uio", 0}, {"vfio-pci", 0}, {"uio_pci_generic", 0} };
 
 static interface_t devices[DEVICES_SIZE];
 static size_t devices_size = 0;
 
 int
-parse_file(const char * fname, interface_t** out)
+parse_file(const char * fname, interface_t ** out)
 {
     FILE *file = fopen(fname, "r");
     if (!file)
@@ -21,9 +31,13 @@ parse_file(const char * fname, interface_t** out)
 
     fseek(file, 0, SEEK_END);
     size_t flen = ftell(file);
+    if (!flen)
+        return -1;
     fseek(file, 0, SEEK_SET);
 
     char *buf = malloc(flen);
+    if (!buf)
+        return -1;
     flen = fread(buf, 1, flen, file);
     if (!flen) {
         free(buf);
@@ -44,11 +58,11 @@ parse_file(const char * fname, interface_t** out)
     }
 
     free(buf);
+    fclose(file);
     *out = net;
 
     return cnt;
 }
-
 
 void
 get_lshw_stats(interface_t * net, mxml_node_t * tree)
@@ -171,6 +185,7 @@ void dump_lshw(interface_t * net)
     printf("RSS: %s \n", net->RSS);
 }
 
+
 static size_t
 read_all_file(const char *fname, char *buf, size_t size)
 {
@@ -209,31 +224,37 @@ device_to_str(interface_t * dev, char *str)
 {
     sprintf(str,
             "Slot:\t%s\n"
-                    "Class:\t%s\n"
-                    "Vendor:\t%s\n"
-                    "Device:\t%s\n"
-                    "SVendor:\t%s\n"
-                    "SDevice:\t%s\n"
-                    "PhySlot:\t%s\n"
-                    "Rev:\t%s\n"
-                    "Driver:\t%s\n"
-                    "DriverStr:\t%s\n"
-                    "Module:\t%s\n"
-                    "ModuleStr:\t%s\n"
-                    "Interface:\t%s\n"
-                    "ProgIf:\t%s\n"
-                    "Active:\t%s\n"
-                    "ssh_if:\t%d\n",
-            dev->slot,
-            dev->class,
-            dev->vendor,
-            dev->device,
-            dev->svendor,
-            dev->sdevice,
-            dev->phy_slot,
-            dev->rev,
-            dev->driver,
-            dev->driver_str, dev->module, dev->module_str, dev->interface, dev->progif, dev->active, dev->ssh_if);
+            "Class:\t%s\n"
+            "Vendor:\t%s\n"
+            "Device:\t%s\n"
+            "SVendor:\t%s\n"
+            "SDevice:\t%s\n"
+            "PhySlot:\t%s\n"
+            "Rev:\t%s\n"
+            "Driver:\t%s\n"
+            "DriverStr:\t%s\n"
+            "Module:\t%s\n"
+            "ModuleStr:\t%s\n"
+            "Interface:\t%s\n"
+            "ProgIf:\t%s\n"
+            "Active:\t%s\n"
+            "ssh_if:\t%d\n",
+            dev->Slot,
+            dev->Class,
+            dev->Vendor,
+            dev->Device,
+            dev->SVendor,
+            dev->SDevice,
+            dev->PhySlot,
+            dev->Rev,
+            dev->Driver,
+            dev->DriverStr,
+            dev->Module,
+            dev->ModuleStr,
+            dev->Interface,
+            dev->ProgIf,
+            dev->Active,
+            dev->SSH_If);
 }
 
 char *
@@ -325,7 +346,7 @@ has_driver(const char *drv)
     unsigned i;
 
     for (i = 0; i < devices_size; ++i) {
-        if (!strcmp(devices[i].slot, drv) && devices[i].driver_str) {
+        if (!strcmp(devices[i].Slot, drv) && devices[i].DriverStr) {
             return 1;
         }
     }
@@ -336,10 +357,10 @@ has_driver(const char *drv)
 void
 get_pci_device_details(interface_t * dev)
 {
-    strcpy(dev->active, "");
+    strcpy(dev->Active, "");
 
     char cmd[STR_MAX];
-    sprintf(cmd, "lspci -vmmks %s", dev->slot);
+    sprintf(cmd, "lspci -vmmks %s", dev->Slot);
     char *extra_info = check_output(cmd);
 
     char *line;
@@ -354,25 +375,25 @@ get_pci_device_details(interface_t * dev)
 
         char *field = NULL;
         if (!strcmp(name, "Class:"))
-            field = dev->class;
+            field = dev->Class;
         else if (!strcmp(name, "Vendor:"))
-            field = dev->vendor;
+            field = dev->Vendor;
         else if (!strcmp(name, "Device:"))
-            field = dev->device;
+            field = dev->Device;
         else if (!strcmp(name, "SVendor:"))
-            field = dev->svendor;
+            field = dev->SVendor;
         else if (!strcmp(name, "SDevice:"))
-            field = dev->sdevice;
+            field = dev->SDevice;
         else if (!strcmp(name, "Rev:"))
-            field = dev->rev;
+            field = dev->Rev;
         else if (!strcmp(name, "Driver:"))
-            field = dev->driver;
+            field = dev->Driver;
         else if (!strcmp(name, "Module:"))
-            field = dev->module;
+            field = dev->Module;
         else if (!strcmp(name, "Interface:"))
-            field = dev->interface;
+            field = dev->Interface;
         else if (!strcmp(name, "PhySlot:"))
-            field = dev->phy_slot;
+            field = dev->PhySlot;
 
         if (field) {
             strcpy(field, value);
@@ -398,7 +419,7 @@ get_dpdk_nic_details(void)
     while (dev_line != NULL) {
         if (strstr(dev_line, "Slot")) {
             i = 0;
-            if (!strcmp(dev.class, ETHERNET_CLASS)) {
+            if (!strcmp(dev.Class, ETHERNET_CLASS)) {
                 devices[devices_size] = dev;
                 ++devices_size;
             }
@@ -410,29 +431,29 @@ get_dpdk_nic_details(void)
         const char *value = strsep(&dev_line, "\t");
         char *field = NULL;
         if (!strcmp(name, "Slot:"))
-            field = dev.slot;
+            field = dev.Slot;
         else if (!strcmp(name, "Class:"))
-            field = dev.class;
+            field = dev.Class;
         else if (!strcmp(name, "Vendor:"))
-            field = dev.vendor;
+            field = dev.Vendor;
         else if (!strcmp(name, "Device:"))
-            field = dev.device;
+            field = dev.Device;
         else if (!strcmp(name, "SVendor:"))
-            field = dev.svendor;
+            field = dev.SVendor;
         else if (!strcmp(name, "SDevice:"))
-            field = dev.sdevice;
+            field = dev.SDevice;
         else if (!strcmp(name, "Rev:"))
-            field = dev.rev;
+            field = dev.Rev;
         else if (!strcmp(name, "Driver:"))
-            field = dev.driver;
+            field = dev.Driver;
         else if (!strcmp(name, "Module:"))
-            field = dev.module;
+            field = dev.Module;
         else if (!strcmp(name, "ProgIf:"))
-            field = dev.progif;
+            field = dev.ProgIf;
         else if (!strcmp(name, "Interface:"))
-            field = dev.interface;
+            field = dev.Interface;
         else if (!strcmp(name, "PhySlot:"))
-            field = dev.phy_slot;
+            field = dev.PhySlot;
 
         if (field) {
             strcpy(field, value);
@@ -442,7 +463,7 @@ get_dpdk_nic_details(void)
         ++i;
     }
 
-    if ((dev_line == NULL) && !strcmp(dev.class, ETHERNET_CLASS)) {
+    if ((dev_line == NULL) && !strcmp(dev.Class, ETHERNET_CLASS)) {
         devices[devices_size] = dev;
         ++devices_size;
     }
@@ -478,19 +499,19 @@ get_dpdk_nic_details(void)
         get_pci_device_details(devices + i);
 
         for (j = 0; j < ssh_if_size; ++j) {
-            if (strstr(devices[i].driver, ssh_if[j])) {
-                devices[i].ssh_if = 1;
-                strcpy(devices[i].active, "*Active*");
+            if (strstr(devices[i].Driver, ssh_if[j])) {
+                devices[i].SSH_If = 1;
+                strcpy(devices[i].Active, "*Active*");
                 break;
             }
         }
 
-        if (devices[i].module_str[0]) {
+        if (devices[i].ModuleStr[0]) {
             for (j = 0; j < DPDK_SIZE; ++j) {
-                if (dpdk_drivers[j].found && strstr(devices[i].module_str, dpdk_drivers[j].name) == NULL) {
+                if (dpdk_drivers[j].found && strstr(devices[i].ModuleStr, dpdk_drivers[j].name) == NULL) {
                     char buf[STR_MAX];
-                    sprintf(buf, "%s,%s", devices[i].module_str, dpdk_drivers[j].name);
-                    strcpy(devices[i].module_str, buf);
+                    sprintf(buf, "%s,%s", devices[i].ModuleStr, dpdk_drivers[j].name);
+                    strcpy(devices[i].ModuleStr, buf);
                 }
             }
         } else {
@@ -501,14 +522,14 @@ get_dpdk_nic_details(void)
                     strcat(buf, ",");
                 }
             }
-            strcat(devices[i].module_str, buf);
+            strcat(devices[i].ModuleStr, buf);
         }
 
-        if (has_driver(devices[i].slot)) {
+        if (has_driver(devices[i].Slot)) {
             char *driver_str = NULL;
             for (o = 0; o < devices_size; ++o) {
-                if (devices[o].driver_str[0]) {
-                    driver_str = devices[o].driver_str;
+                if (devices[o].DriverStr[0]) {
+                    driver_str = devices[o].DriverStr;
                     break;
                 }
             }
@@ -535,19 +556,19 @@ dev_id_from_dev_name(const char *dev_name)
 {
     size_t i;
     for (i = 0; i < devices_size; ++i) {
-        if (!strcmp(dev_name, devices[i].device)) {
+        if (!strcmp(dev_name, devices[i].Device)) {
             return dev_name;
         }
 
         static char buf[STR_MAX];
         memset(buf, 0, sizeof (buf));
         sprintf(buf, "0000:%s", dev_name);
-        if (!strcmp(buf, devices[i].device)) {
+        if (!strcmp(buf, devices[i].Device)) {
             return buf;
         }
 
-        if (strstr(devices[i].interface, dev_name)) {
-            return devices[i].slot;
+        if (strstr(devices[i].Interface, dev_name)) {
+            return devices[i].Slot;
         }
     }
 
@@ -567,24 +588,24 @@ unbind_one(const char *dev_id, int force)
 
     interface_t *dev = NULL;
     for (i = 0; i < devices_size; ++i) {
-        if (!strcmp(dev_id, devices[i].slot)) {
+        if (!strcmp(dev_id, devices[i].Slot)) {
             dev = &devices[i];
             break;
         }
     }
 
-    if (dev == NULL || (dev->ssh_if && !force)) {
+    if (dev == NULL || (dev->SSH_If && !force)) {
         return (1);
     }
 
     char path[STR_MAX];
-    sprintf(path, "/sys/bus/pci/drivers/%s/unbind", dev->driver);
+    sprintf(path, "/sys/bus/pci/drivers/%s/unbind", dev->Driver);
     FILE *f = fopen(path, "a");
     if (f == NULL) {
         return (1);
     }
 
-    memcpy(dev->driver_str, dev->driver, strlen(dev->driver));
+    memcpy(dev->DriverStr, dev->Driver, strlen(dev->Driver));
     fwrite(dev_id, 1, strlen(dev_id), f);
     fclose(f);
     return (0);
@@ -616,22 +637,22 @@ bind_one(const char *dev_id, const char *driver, int force)
     const char *saved_driver = NULL;
 
     for (i = 0; i < devices_size; ++i) {
-        if (!strcmp(dev_id, devices[i].slot)) {
+        if (!strcmp(dev_id, devices[i].Slot)) {
             dev = devices + i;
         }
     }
 
 
-    if (dev == NULL || (dev->ssh_if && !force))
+    if (dev == NULL || (dev->SSH_If && !force))
         return (1);
 
     if (has_driver(dev_id)) {
-        if (!strcmp(dev->driver_str, driver)) {
+        if (!strcmp(dev->DriverStr, driver)) {
             return (1);
         } else {
-            saved_driver = dev->driver_str;
+            saved_driver = dev->DriverStr;
             err = unbind_one(dev_id, force);
-            strcpy(dev->device, "");
+            strcpy(dev->Device, "");
             if (err)
                 return (1);
         }
@@ -642,7 +663,7 @@ bind_one(const char *dev_id, const char *driver, int force)
             memset(path, 0, sizeof(path));
             sprintf(path, "/sys/bus/pci/drivers/%s/new_id", driver);
             FILE *f = fopen(path, "w");
-            fprintf(f, "%04x %04x", atoi(dev->vendor), atoi(dev->device));
+            fprintf(f, "%04x %04x", atoi(dev->Vendor), atoi(dev->Device));
             fclose(f);
         }
     }
@@ -660,9 +681,9 @@ bind_one(const char *dev_id, const char *driver, int force)
     fclose(f);
     if (ret <= 0) {
         memset((char *)&tmp, 0, sizeof(tmp));
-        strcpy(tmp.slot, dev_id);
+        strcpy(tmp.Slot, dev_id);
         get_pci_device_details(&tmp);
-        if (!tmp.driver_str[0]) {
+        if (!tmp.DriverStr[0]) {
             return (1);
         }
 
@@ -689,9 +710,9 @@ bind_all(const char *dev_list[], size_t size, const char *driver, int force)
 
     for (j = 0; j < devices_size; ++j) {
         int cont = 0;
-        if (devices[j].driver_str[0]) {
+        if (devices[j].DriverStr[0]) {
             for (i = 0; i < size; ++i) {
-                if (strstr(dev_list[i], devices[i].slot)) {
+                if (strstr(dev_list[i], devices[i].Slot)) {
                     cont = 1;
                 }
             }
@@ -700,10 +721,10 @@ bind_all(const char *dev_list[], size_t size, const char *driver, int force)
             continue;
         }
 
-        char *d = devices[j].slot;
+        char *d = devices[j].Slot;
         get_pci_device_details(&devices[j]);
 
-        if (devices->driver_str[0]) {
+        if (devices->DriverStr[0]) {
             err = unbind_one(d, force);
             if (err)
                 return (1);
@@ -721,7 +742,7 @@ show_status(interface_t * kernel_drv, size_t * kernel_drv_size, interface_t * dp
 
     size_t ksize = 0, dpdksize = 0, nosize = 0;
     for (i = 0; i < devices_size; ++i) {
-        if (!has_driver(devices[i].slot) && ksize < *kernel_drv_size) {
+        if (!has_driver(devices[i].Slot) && ksize < *kernel_drv_size) {
             kernel_drv[ksize] = devices[i];
             ++ksize;
             continue;
@@ -729,7 +750,7 @@ show_status(interface_t * kernel_drv, size_t * kernel_drv_size, interface_t * dp
 
         int found = 0;
         for (j = 0; j < DPDK_SIZE; ++j) {
-            if (dpdk_drivers[j].found && strstr(devices[i].driver_str, dpdk_drivers[j].name)
+            if (dpdk_drivers[j].found && strstr(devices[i].DriverStr, dpdk_drivers[j].name)
                 && dpdksize < *dpdk_drv_size) {
                 dpdk_drv[dpdksize] = devices[i];
                 ++dpdksize;

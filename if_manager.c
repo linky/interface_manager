@@ -1,91 +1,91 @@
 #include "if_manager.h"
 
-int Init()
+int im_Init()
 {
     return 0;
 }
 
-int RefreshAll()
+int im_RefreshAll()
 {
     return 0;
 }
 
-int Refresh_System()
+int im_Refresh_System()
 {
     return 0;
 }
 
-int Refresh_Bind()
+int im_Refresh_Bind()
 {
     return 0;
 }
 
-int Refresh_PCIDevice(const char * id)
+int im_Refresh_PCIDevice(const char *id)
 {
     return 0;
 }
 
-int StatusAllMulti()
+int im_StatusAllMulti()
 {
     return 0;
 }
 
-int StatusAll()
+int im_StatusAll()
 {
     return 0;
 }
 
-int GetDrivers()
+int im_GetDrivers()
 {
     return 0;
 }
 
-int GetInterfaceByIP(const char * ip)
+int im_GetInterfaceByIP(const char *ip)
 {
     return 0;
 }
 
-int GetInterfaceByDPDKPort(int port)
+int im_GetInterfaceByDPDKPort(int port)
 {
     return 0;
 }
 
-int GetInterfaceByPCI(const char * id)
+int im_GetInterfaceByPCI(const char *id)
 {
     return 0;
 }
 
-int GetInterfaceByName(const char * name)
+int im_GetInterfaceByName(const char *name)
 {
     return 0;
 }
 
-int bindInterface()
+int im_bindInterface()
 {
     return 0;
 }
 
-int unbindInterface()
+int im_unbindInterface()
 {
     return 0;
 }
 
-int UpdatePort()
+int im_UpdatePort()
 {
     return 0;
 }
 
-int UpdateIP()
+int im_UpdateIP()
 {
     return 0;
 }
 
-int UpdateLinkState()
+int im_UpdateLinkState()
 {
     return 0;
 }
 
-int Replace()
+int im_Replace()
 {
     return 0;
 }
