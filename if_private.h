@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <mxml.h>
 
 #define STR_MAX 256
 #define LSHW_STR_LEN STR_MAX
@@ -33,6 +34,29 @@ typedef struct
     char active[STR_MAX];
     int ssh_if;
 } device;
+
+typedef struct {
+    char InterfaceName[LSHW_STR_LEN];
+    char MacAdress[LSHW_STR_LEN];
+    char InterfaceType[LSHW_STR_LEN];
+    char Link[LSHW_STR_LEN];
+    char Product[LSHW_STR_LEN];
+    char Model[LSHW_STR_LEN];
+    char Driver[LSHW_STR_LEN];
+    char DriverVersion[LSHW_STR_LEN];
+    char PciLocation[LSHW_STR_LEN];
+    char IPv4[LSHW_STR_LEN];
+    char IPv6[LSHW_STR_LEN];
+    char Speed[LSHW_STR_LEN];
+    char Status[LSHW_STR_LEN];
+    char RSS[LSHW_STR_LEN];
+} lshw_t;
+
+
+int parse_file(const char * fname, lshw_t ** out);
+
+void get_lshw_stats(lshw_t * net, mxml_node_t * tree);
+
 
 char* check_output(const char* cmd);
 
