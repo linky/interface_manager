@@ -591,21 +591,10 @@ show_status(device * kernel_drv, size_t * kernel_drv_size, device * dpdk_drv, si
 	*no_drv_size = nosize;
 }
 
-#if 0
+#ifndef NOMAIN
 int
 main(int argc, char *argv[])
 {
-	check_dpdk_modules();
-	get_dpdk_nic_details();
 
-	enum { DSIZE = 10 };
-	device a[DSIZE], b[DSIZE], c[DSIZE];
-	size_t asize = DSIZE, bsize = DSIZE, csize = DSIZE;
-	show_status(a, &asize, b, &bsize, c, &csize);
-	static char buf[STR_MAX * 20];
-	device_to_str(c, buf);
-	puts(buf);
-
-	return 0;
 }
 #endif

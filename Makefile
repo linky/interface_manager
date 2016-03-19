@@ -1,7 +1,7 @@
-TARGET=bind
+TARGET=interface_manager
 
 CC=gcc
-CFLAGS=-Wall -Os
+CFLAGS=-Wall -Os -lmxml -lpthread
 SOURCES=bind.c lshw.c
 
 all:
