@@ -33,9 +33,6 @@ typedef struct
     char progif[STR_MAX];
     char active[STR_MAX];
     int ssh_if;
-} device;
-
-typedef struct {
     char InterfaceName[LSHW_STR_LEN];
     char MacAdress[LSHW_STR_LEN];
     char InterfaceType[LSHW_STR_LEN];
@@ -50,12 +47,12 @@ typedef struct {
     char Speed[LSHW_STR_LEN];
     char Status[LSHW_STR_LEN];
     char RSS[LSHW_STR_LEN];
-} lshw_t;
+} interface_t; // TODO rename and check fields
 
 
-int parse_file(const char * fname, lshw_t ** out);
+int parse_file(const char * fname, interface_t ** out);
 
-void get_lshw_stats(lshw_t * net, mxml_node_t * tree);
+void get_lshw_stats(interface_t * net, mxml_node_t * tree);
 
 
 char* check_output(const char* cmd);
@@ -66,7 +63,7 @@ void check_modules();
 
 int has_driver(const char* drv);
 
-void get_pci_device_details(device* dev);
+void get_pci_device_details(interface_t* dev);
 
 void get_nic_details();
 
@@ -80,4 +77,4 @@ int bind_one(const char* dev_id, const char* driver, int force);
 
 int bind_all(const char* dev_list[], size_t size, const char* driver, int force);
 
-void show_status(device* kernel_drv, size_t* kernel_drv_size, device* dpdk_drv, size_t* dpdk_drv_size, device* no_drv, size_t* no_drv_size);
+void show_status(interface_t* kernel_drv, size_t* kernel_drv_size, interface_t* dpdk_drv, size_t* dpdk_drv_size, interface_t* no_drv, size_t* no_drv_size);

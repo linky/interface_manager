@@ -9,11 +9,11 @@
 
 static driver dpdk_drivers[] = { {"igb_uio", 0}, {"vfio-pci", 0}, {"uio_pci_generic", 0} };
 
-static device devices[DEVICES_SIZE];
+static interface_t devices[DEVICES_SIZE];
 static size_t devices_size = 0;
 
 int
-parse_file(const char * fname, lshw_t** out)
+parse_file(const char * fname, interface_t** out)
 {
     FILE *file = fopen(fname, "r");
     if (!file)
@@ -32,13 +32,13 @@ parse_file(const char * fname, lshw_t** out)
 
     mxml_node_t *tree = mxmlLoadString(NULL, buf, MXML_OPAQUE_CALLBACK);
     mxml_node_t *it =NULL;
-    lshw_t *net = NULL;
+    interface_t *net = NULL;
     int cnt = 0;
 
     for(it = mxmlFindElement(tree, tree, "node", NULL, NULL, MXML_DESCEND);
         it != NULL; it = mxmlFindElement(it, tree, "node", NULL, NULL, MXML_DESCEND)) {
 
-        net = (lshw_t *)realloc(net, (cnt + 1) * sizeof(lshw_t));
+        net = (interface_t *)realloc(net, (cnt + 1) * sizeof(interface_t));
         get_lshw_stats(net + cnt, it);
         cnt++;
     }
@@ -51,7 +51,7 @@ parse_file(const char * fname, lshw_t** out)
 
 
 void
-get_lshw_stats(lshw_t * net, mxml_node_t * tree)
+get_lshw_stats(interface_t * net, mxml_node_t * tree)
 {
     mxml_node_t *temp;
 
@@ -152,7 +152,7 @@ get_lshw_stats(lshw_t * net, mxml_node_t * tree)
     mxmlDelete(temp);
 }
 
-void dump_lshw(lshw_t * net)
+void dump_lshw(interface_t * net)
 {
     printf("\n");
     printf("Interface name: %s \n", net->InterfaceName);
@@ -205,7 +205,7 @@ reset_dpdk_devices_table(void)
 }
 
 void
-device_to_str(const device * dev, char *str)
+device_to_str(interface_t * dev, char *str)
 {
     sprintf(str,
             "Slot:\t%s\n"
@@ -334,7 +334,7 @@ has_driver(const char *drv)
 }
 
 void
-get_pci_device_details(device * dev)
+get_pci_device_details(interface_t * dev)
 {
     strcpy(dev->active, "");
 
@@ -385,7 +385,7 @@ get_pci_device_details(device * dev)
 void
 get_dpdk_nic_details(void)
 {
-    device dev;
+    interface_t dev;
     size_t j, i, o;
     char *dev_line;
 
@@ -565,7 +565,7 @@ unbind_one(const char *dev_id, int force)
         return (1);
     }
 
-    device *dev = NULL;
+    interface_t *dev = NULL;
     for (i = 0; i < devices_size; ++i) {
         if (!strcmp(dev_id, devices[i].slot)) {
             dev = &devices[i];
@@ -608,8 +608,8 @@ unbind_all(const char *dev_list[], size_t size, int force)
 int
 bind_one(const char *dev_id, const char *driver, int force)
 {
-    device *dev = NULL;
-    device tmp;
+    interface_t *dev = NULL;
+    interface_t tmp;
     unsigned i;
     int j, err, ret;
     char path[STR_MAX];
@@ -713,7 +713,7 @@ bind_all(const char *dev_list[], size_t size, const char *driver, int force)
 }
 
 void
-show_status(device * kernel_drv, size_t * kernel_drv_size, device * dpdk_drv, size_t * dpdk_drv_size, device * no_drv,
+show_status(interface_t * kernel_drv, size_t * kernel_drv_size, interface_t * dpdk_drv, size_t * dpdk_drv_size, interface_t * no_drv,
         size_t * no_drv_size)
 {
     unsigned i;
@@ -752,7 +752,7 @@ show_status(device * kernel_drv, size_t * kernel_drv_size, device * dpdk_drv, si
 int
 main(int argc, char *argv[])
 {
-    lshw_t *net; // need free
+    interface_t *net; // need free
     int size = parse_file("/root/interface_manager/out.xml", &net);
 }
 #endif

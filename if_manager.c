@@ -1,3 +1,5 @@
+#include "if_manager.h"
+
 int Init()
 {
     return 0;
