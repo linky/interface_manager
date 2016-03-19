@@ -6,6 +6,7 @@
 #include <dirent.h>
 
 #include "dpdk_misc.h"
+#include "lshw.h"
 
 static driver dpdk_drivers[] = { {"igb_uio", 0}, {"vfio-pci", 0}, {"uio_pci_generic", 0} };
 
@@ -16,8 +17,6 @@ static size_t
 read_all_file(const char *fname, char *buf, size_t size)
 {
 	FILE *file = fopen(fname, "r");
-	fseek(file, 0, SEEK_END);
-	fseek(file, 0, SEEK_SET);
 	int flen = fread(buf, 1, size, file);
 	fclose(file);
 
@@ -595,6 +594,7 @@ show_status(device * kernel_drv, size_t * kernel_drv_size, device * dpdk_drv, si
 int
 main(int argc, char *argv[])
 {
-
+	lshw_t *net; // need free
+	size_t size = parse_file("/root/interface_manager/out.xml", &net);
 }
 #endif

@@ -4,23 +4,38 @@
 #include <stdio.h>
 
 
-mxml_node_t*
-parse_file()
+int
+parse_file(const char * fname, lshw_t** out)
 {
-	FILE* fp; // TODO remove
-	mxml_node_t *it;
-	lshw_t *net;
-	int cnt;
+	FILE *file = fopen(fname, "r");
+	if (!file)
+		return NULL;
 
-	mxml_node_t *tree = mxmlLoadFile(NULL, fp, MXML_OPAQUE_CALLBACK);
-	fclose(fp);
+	fseek(file, 0, SEEK_END);
+	size_t flen = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	char *buf = malloc(flen);
+	flen = fread(buf, 1, flen, file);
+	if (!flen)
+		return NULL;
+
+	mxml_node_t *tree = mxmlLoadString(NULL, buf, MXML_OPAQUE_CALLBACK);
+	mxml_node_t *it =NULL;
+	lshw_t *net = NULL;
+	int cnt = 0;
 	for(it = mxmlFindElement(tree, tree, "node", NULL, NULL, MXML_DESCEND);
-	    it != NULL; it = mxmlFindElement(it, tree, "node", NULL, NULL, MXML_DESCEND)) {
-		
+		it != NULL; it = mxmlFindElement(it, tree, "node", NULL, NULL, MXML_DESCEND)) {
+
 		net = (lshw_t *)realloc(net, (cnt + 1) * sizeof(lshw_t));
 		get_lshw_stats(net + cnt, it);
 		cnt++;
 	}
+
+	free(buf);
+
+	*out = net;
+	return cnt;
 }
 
 

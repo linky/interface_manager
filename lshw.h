@@ -19,4 +19,5 @@ typedef struct {
     char RSS[LSHW_STR_LEN];
 } lshw_t;
 
+int parse_file(const char * fname, lshw_t ** out);
 void get_lshw_stats(lshw_t * net, mxml_node_t * tree);

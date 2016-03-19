@@ -9,4 +9,4 @@ all:
 	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET)
 
 clean:
-	rm -f bind bind.so
+	rm -f $(TARGET) $(TARGET).so
