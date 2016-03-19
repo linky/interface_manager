@@ -188,7 +188,7 @@ void dump_lshw(interface_t * net)
     printf("Driver: %s \n", net->Driver);
     printf("Driver version: %s \n", net->DriverVersion);
     printf("PCI location: %s \n", net->PciLocation);
-    printf("RSS: %s \n", net->RSS);
+    printf("RSS: %d \n", net->RSS);
 }
 
 
@@ -243,7 +243,7 @@ device_to_str(interface_t * dev, char *str)
             "ModuleStr:\t%s\n"
             "Interface:\t%s\n"
             "ProgIf:\t%s\n"
-            "Active:\t%s\n"
+            "Active:\t%d\n"
             "ssh_if:\t%d\n",
             dev->Slot,
             dev->Class,
@@ -363,7 +363,7 @@ has_driver(const char *drv)
 void
 get_pci_device_details(interface_t * dev)
 {
-    strcpy(dev->Active, "");
+    dev->Active = -1;
 
     char cmd[STR_MAX];
     sprintf(cmd, "lspci -vmmks %s", dev->Slot);
@@ -494,7 +494,7 @@ get_dpdk_nic_details(void)
         for (j = 0; j < ssh_if_size; ++j) {
             if (strstr(devices[i].Driver, ssh_if[j])) {
                 devices[i].SSH_If = 1;
-                strcpy(devices[i].Active, "*Active*");
+                devices[i].Active = 1;
                 break;
             }
         }

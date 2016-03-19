@@ -1,18 +1,19 @@
 #pragma once
 
+#include <stdlib.h>
 #include <stdint.h>
 
 #define STR_MAX 128
 
 typedef struct
 {
-    char Slot[STR_MAX];
-    char Class[STR_MAX];
+    char Slot[16];
+    char Class[16];
     char Vendor[STR_MAX];
     char Device[STR_MAX];
     char SVendor[STR_MAX];
     char SDevice[STR_MAX];
-    char PhySlot[STR_MAX];
+    char PhySlot[16];
     uint64_t Rev;
     char Driver[STR_MAX];
     char DriverStr[STR_MAX];
@@ -20,15 +21,14 @@ typedef struct
     char ModuleStr[STR_MAX];
     char Interface[STR_MAX];
     char ProgIf[STR_MAX];
-    char Active[STR_MAX];
-    int SSH_If;
+    uint8_t Active;
+    uint8_t SSH_If;
     char InterfaceName[STR_MAX];
-    char MacAdress[STR_MAX];
+    char MacAdress[36];
     char InterfaceType[STR_MAX];
     uint8_t Link;
     char Product[STR_MAX];
     char Model[STR_MAX];
-    //char Driver[STR_MAX];
     char DriverVersion[STR_MAX];
     char PciLocation[STR_MAX];
     uint32_t IPv4;

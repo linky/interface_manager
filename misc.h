@@ -11,7 +11,7 @@ static uint64_t IP_to_Int(const char * str)
         uint64_t ip;
     } res;
     res.ip = 0;
-    char buf[STR_MAX];
+    char buf[64];
     strcpy(buf, str);
 
     char *dig = strtok(buf, ".:");
